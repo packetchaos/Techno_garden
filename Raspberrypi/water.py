@@ -9,36 +9,31 @@ GPIO.setup(recv, GPIO.IN)
 
 tot_cnt=0
 time_end=0.0
-#gpio_last=0
 constant = 1.79
-#pulses = 0 # for dummy program for testing
+
 
 def request_data(method, url_mod):
     url= "http://water.hyrule.local/water/"
-
     try:
         r = requests.request(method, url + url_mod, verify=True)
         return r
-
     except Exception as E:
         print(E)
 
 
 def sensor_loop():
     while True:
-        #global pulses # dummy
-        #pulses = pulses + 1 # dummy
-
         pulses = 0
         rate_cnt = 0
         gpio_last = 0
+
         # 6 pulses is one rotation
-        while pulses <=5:
+        while pulses <= 5:
             # Assign and monitor input
             gpio_cur = GPIO.input(recv)
 
             # if the input isn't 0 and isn't in it's last state, it changes state(pulsed)
-            if gpio_cur !=0 and gpio_cur != gpio_last:
+            if gpio_cur != 0 and gpio_cur != gpio_last:
                 pulses += 1
 
             # Make last state the current state for comparison
@@ -56,11 +51,11 @@ def reporter_loop():
     while True:
         global recv
         global tot_cnt
-        if tot_cnt !=0 and tot_cnt != tot_cnt_last:
+        if tot_cnt != 0 and tot_cnt != tot_cnt_last:
             url_string = str(recv) + "/" + str(tot_cnt) + "/" + str(time.time())
             request_data("POST", url_string)
-        time.sleep(30)
         tot_cnt_last = tot_cnt
+        time.sleep(30)
 
 
 thread1 = threading.Thread(target=sensor_loop)

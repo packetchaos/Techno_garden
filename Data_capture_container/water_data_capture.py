@@ -26,12 +26,14 @@ def post_info(sensorid, raw, time):
         water_conn = new_db_connection(database)
         water_conn.execute('pragma journal_mode=wal;')
         raw_list = []
+
         with water_conn:
             raw_list.append(sensorid)
             raw_list.append(raw)
             raw_list.append(time)
 
             insert_raw_water_stats(water_conn, raw_list)
+
         return render_template("success.html")
 
     except TypeError:
@@ -51,7 +53,9 @@ def get_info():
 
             rows = cur.fetchall()
             for x in rows:
-                raw_list.append(x)
+                json_return = {"sensor_id": x[0], "rotation_count": x[1], "time": x[2]}
+
+                raw_list.append(json_return)
 
             return jsonify(raw_list)
 
