@@ -1,7 +1,7 @@
 from flask import Flask, render_template, jsonify
 from Data_capture_container.database import new_db_connection, insert_raw_water_stats, create_table
-
-
+import time
+import matplotlib.pyplot as plt
 app = Flask(__name__)
 
 
@@ -52,6 +52,7 @@ def get_info():
             cur.execute("SELECT * FROM water;")
 
             rows = cur.fetchall()
+
             for x in rows:
                 json_return = {"sensor_id": x[0], "rotation_count": x[1], "time": x[2]}
 
