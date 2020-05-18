@@ -23,7 +23,7 @@ def create_table(conn, table_information):
 
 
 def insert_raw_water_stats(conn, raw_stats):
-    sql = '''INSERT or IGNORE into water(sensor_id, raw_value, time) VALUES(?,?,?)'''
+    sql = '''INSERT or IGNORE into water(month, day, sensor_id, raw_value, time) VALUES(?,?,?,?,?)'''
     cur = conn.cursor()
     cur.execute('pragma journal_mode=wal;')
     cur.execute(sql, raw_stats)

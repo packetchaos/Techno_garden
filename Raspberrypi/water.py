@@ -13,7 +13,7 @@ constant = 1.79
 
 
 def request_data(method, url_mod):
-    url= "http://water.hyrule.local/water/"
+    url = "http://water.hyrule.local/water/"
     try:
         r = requests.request(method, url + url_mod, verify=True)
         return r
@@ -55,7 +55,7 @@ def reporter_loop():
             url_string = str(recv) + "/" + str(tot_cnt) + "/" + str(time.time())
             request_data("POST", url_string)
         tot_cnt_last = tot_cnt
-        time.sleep(30)
+        time.sleep(60)
 
 
 thread1 = threading.Thread(target=sensor_loop)

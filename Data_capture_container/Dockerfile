@@ -8,7 +8,7 @@ CMD mkdir /usr/src/app
 CMD mkdir /usr/src/app/templates
 
 ADD water_data_capture.py /usr/src/app/
-ADD database.py /usr/src/app
+ADD database.py /usr/src/app/
 ADD templates/water.html /usr/src/app/templates/
 ADD templates/success.html /usr/src/app/templates/
 ENV PATH "$PATH:/usr/bin/env/"
