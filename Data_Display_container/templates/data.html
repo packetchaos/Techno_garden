@@ -3,29 +3,29 @@
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
 
-
 <style>
 
 .responstable {
   margin: 1em 0;
   width: 100%;
   overflow: hidden;
-  background: #FFF;
-  color: #024457;
+  background: #222;
+  color: #18D0F5;
   border-radius: 10px;
-  border: 1px solid #167F92;
+  border: 1px solid #222;
 }
 .responstable tr {
-  border: 1px solid #D9E4E6;
+  border: 1px solid #222;
 }
 .responstable tr:nth-child(odd) {
-  background-color: #EAF3F3;
+  background-color: #9beafa;
+  color: #222
 }
 .responstable th {
   display: none;
-  border: 1px solid #FFF;
-  background-color: #167F92;
-  color: #FFF;
+  border: 1px solid #222;
+  background-color: #19C3E5;
+  color: #222;
   padding: 1em;
 }
 .responstable th:first-child {
@@ -57,11 +57,11 @@
 .responstable td:first-child {
   display: table-cell;
   text-align: center;
-  border-right: 1px solid #D9E4E6;
+  border-right: 1px solid #222;
 }
 @media (min-width: 480px) {
   .responstable td {
-    border: 1px solid #D9E4E6;
+    border: 1px solid #222;
   }
 }
 .responstable th, .responstable td {
@@ -78,22 +78,18 @@
 body {
   padding: 0 2em;
   font-family: Arial, sans-serif;
-  color: #024457;
-  background: #f2f2f2;
+  color: #18D0F5;
+  background: #222;
 }
 
 h1 {
   font-family: Verdana;
   font-weight: normal;
   font-size:xx-large;
-  color: #024457;
+  color: #18D0F5;
 }
 h1 span {
-  color: #167F92;
-}
-status{
-    $('.status:contains("-")'.css('color','red');
-
+  color: #18D0F5;
 }
 </style>
 <head>
@@ -102,7 +98,7 @@ status{
     <h1 align="Center">{{compare_date}} Water Usage</h1>
     <h2 align="Center">Main Line - 13</h2>
     <h3 align="Center">Total = {{total}} Gallons Used</h3>
-    <img src="/today.png">
+    <div align="Center"><img src="/today.png"></div>
     <table class="responstable">
         <tr>
             <th>Sensor ID</th>

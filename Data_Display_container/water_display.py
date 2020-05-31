@@ -4,6 +4,7 @@ import io
 from flask import Flask, Response, render_template, request
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
 
 app = Flask(__name__)
 
@@ -131,15 +132,37 @@ def display_data():
                 last_value = int(update["rotation_count"])
 
     # Set the figure size
-    fig = Figure(figsize=(16, 9))
+    fig = Figure(figsize=(16, 7))
+
+    # Hide the whitepace of the figure
+    fig.patch.set_visible(False)
+
     axis = fig.add_subplot(1, 1, 1)
 
     # use the date and pulse count to graph the data
-    axis.plot(date_list, pulse_list, color='tab:green')
+    axis.stackplot(date_list, pulse_list, color='#19C3E5')
+
+    # Set the spine colors
+    axis.spines['bottom'].set_color('#9beafa')
+    axis.spines['top'].set_color('#9beafa')
+    axis.spines['left'].set_color('#9beafa')
+    axis.spines['right'].set_color('#9beafa')
+
+    # Add an Y label
+    axis.set_ylabel('Gallons per Minute')
+
+    # Set the Y axis colors
+    axis.tick_params(axis='y', colors='#9beafa')
+
+    # Set the X axis colors - rotate X axis for readability
+    axis.tick_params(axis='x', colors='#9beafa', rotation=90)
+    axis.yaxis.label.set_color('#9beafa')
 
     # Set the Title of the Graph
-    axis.set_title("Water Usage by Minute")
+    axis.set_title("Water Usage", color='#9beafa')
 
+    # Set the facecolor to the darkmode color
+    axis.set_facecolor('#222')
     output = io.BytesIO()
 
     FigureCanvasAgg(fig).print_png(output)
