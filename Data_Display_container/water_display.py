@@ -129,15 +129,15 @@ def display_data(sensor, month, day):
         # Grab the MonthDay string for capturing a single day of data
         date = time.strftime("%B%d", time.localtime(float(update["timestamp"])))
 
+        if date == compare_date:
+            # 455 pulses per liter - source: http://pnrsolution.org/Datacenter/Vol4/Issue3/16.pdf
+            # rate is rotations between reporting times. current - last value
+            gallons = ((int(update['rotations']) - last_value)/100)/4
+            pulse_list.append(gallons)
+            date_list.append(newtime)
 
-        # 455 pulses per liter - source: http://pnrsolution.org/Datacenter/Vol4/Issue3/16.pdf
-        # rate is rotations between reporting times. current - last value
-        gallons = ((int(update['rotations']) - last_value)/100)/4
-        pulse_list.append(gallons)
-        date_list.append(newtime)
-
-        # set the last value to the current value for rate calculation
-        last_value = int(update["rotations"])
+            # set the last value to the current value for rate calculation
+            last_value = int(update["rotations"])
 
     # Set the figure size
     fig = Figure(figsize=(16, 7))
