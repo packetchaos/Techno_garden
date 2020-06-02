@@ -96,9 +96,9 @@ h1 span {
     <meta charset="UTF-8">
     <title>Water Usage</title>
     <h1 align="Center">{{compare_date}} Water Usage</h1>
-    <h2 align="Center">Main Line - 13</h2>
+    <h2 align="Center">{{line_name}} - {{sensor}}</h2>
     <h3 align="Center">Total = {{total}} Gallons Used</h3>
-    <div align="Center"><img src="/today.png"></div>
+    <div align="Center"><img src="{{sensor}}/{{month}}/{{day}}/today.png"></div>
     <table class="responstable">
         <tr>
             <th>Sensor ID</th>

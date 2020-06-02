@@ -28,7 +28,7 @@ def request_data(method, url_mod):
 @app.route('/')
 @app.route('/stats')
 def main_route():
-    total_data = request_data("GET", "/water")
+    sensor = request.args.get('sensor')
 
     # grab today's date to use if no date is provided
     today = time.strftime("%B%d", time.localtime(time.time()))
@@ -37,12 +37,16 @@ def main_route():
     month = request.args.get('month')
     day = request.args.get('day')
 
+    total_data = request_data("GET", "/water?sensor=" + str(sensor) + "&month=" + str(month) + "&day=" + str(day))
+
     global compare_date
     compare_date = str(month) + str(day)
 
     # If there is no Query params compare_Date with be NoneNone
     if compare_date == 'NoneNone':
         compare_date = today
+        month = time.strftime("%B", time.localtime(time.time()))
+        day = time.strftime("%d", time.localtime(time.time()))
 
     # List to hold parsed data for graphing
     value_list = []
@@ -51,17 +55,17 @@ def main_route():
     # Need to find the lowest value for our starting point
     # This will be used in case the program isn't reset every day
     # Water.py should be reset daily so the rotations don't grow to a massive number.
-    for i in total_data:
+    for i in total_data[month][day]:
         # Grab the month and day for comparison - jan20 for jan 20th
-        date = time.strftime("%B%d", time.localtime(float(i["time"])))
+        date = time.strftime("%B%d", time.localtime(float(i["timestamp"])))
 
         # date to Display
-        r_date = time.strftime("%B %d %H:%M:%S", time.localtime(float(i["time"])))
+        r_date = time.strftime("%B %d %H:%M:%S", time.localtime(float(i["timestamp"])))
 
         # Only grab calculations for a single day; use compare_date
         if date == compare_date:
-            value_list.append(i['rotation_count'])
-            temp_list = [i["rotation_count"], i['sensor_id'], str(r_date)]
+            value_list.append(i['rotations'])
+            temp_list = [i["rotations"], i['sensor'], str(r_date)]
             total_list.append(temp_list)
 
     try:
@@ -75,32 +79,41 @@ def main_route():
 
     # Grab the total and convert into Gallons.
     total = ((end_value - start_value)/100)/4
+    line_name = "Unknown"
 
-    return render_template("data.html", total=total, total_list=total_list, compare_date=compare_date)
+    if sensor == '13':
+        line_name = "Main Line"
+    elif sensor == '15':
+        line_name = "Pepper Bed"
+
+    return render_template("data.html", total=total, total_list=total_list, compare_date=compare_date, sensor=sensor, month=month, day=day, line_name=line_name)
 
 
-@app.route('/today.png')
-def display_data():
+@app.route('/<sensor>/<month>/<day>/today.png')
+def display_data(sensor, month, day):
     # grab raw data from Water_capture container
-    data = request_data("GET", "/water")
+    data = request_data("GET", "/water?sensor=" + sensor + "&month=" + str(month) + "&day=" + str(day))
 
     pulse_list = []
     date_list = []
     lowest_value = []
     today = time.strftime("%B%d", time.localtime(time.time()))
+
     # only Graph water usage for a single day; use compare_date.
     global compare_date
+    compare_date = str(month) + str(day)
+
+    # If there is no Query params compare_Date with be NoneNone
     if compare_date == 'NoneNone':
         compare_date = today
+        month = time.strftime("%B", time.localtime(time.time()))
+        day = time.strftime("%d", time.localtime(time.time()))
 
     # need to find the lowest value for our starting point
     # This is to avoid incorrect calculations when water.py is run for more than one day.
-    for i in data:
-        date = time.strftime("%B%d", time.localtime(float(i["time"])))
-
-        if date == compare_date:
-            # grab all of the rotations to find the lowest value as a starting point.
-            lowest_value.append(i['rotation_count'])
+    for i in data[month][day]:
+        # grab all of the rotations to find the lowest value as a starting point.
+        lowest_value.append(i['rotations'])
     try:
         # Set the lowest value to the last value for our calculations and graphing
         last_value = min(lowest_value)
@@ -109,27 +122,22 @@ def display_data():
         last_value = 0
 
     # Now go through the list again to compare values for Gallons per 60 seconds
-    for update in data:
+    for update in data[month][day]:
         # make time readable
-        newtime = time.strftime("%H:%M", time.localtime(float(update["time"])))
+        newtime = time.strftime("%H:%M", time.localtime(float(update["timestamp"])))
 
         # Grab the MonthDay string for capturing a single day of data
-        date = time.strftime("%B%d", time.localtime(float(update["time"])))
+        date = time.strftime("%B%d", time.localtime(float(update["timestamp"])))
 
-        # single_out a sensor
-        # Eventually set this dynamically
-        if update['sensor_id'] == 13:
 
-            # Grab only a single day using compare_Date(URL params)
-            if date == compare_date:
-                # 455 pulses per liter - source: http://pnrsolution.org/Datacenter/Vol4/Issue3/16.pdf
-                # rate is rotations between reporting times. current - last value
-                gallons = ((int(update['rotation_count']) - last_value)/100)/4
-                pulse_list.append(gallons)
-                date_list.append(newtime)
+        # 455 pulses per liter - source: http://pnrsolution.org/Datacenter/Vol4/Issue3/16.pdf
+        # rate is rotations between reporting times. current - last value
+        gallons = ((int(update['rotations']) - last_value)/100)/4
+        pulse_list.append(gallons)
+        date_list.append(newtime)
 
-                # set the last value to the current value for rate calculation
-                last_value = int(update["rotation_count"])
+        # set the last value to the current value for rate calculation
+        last_value = int(update["rotations"])
 
     # Set the figure size
     fig = Figure(figsize=(16, 7))
