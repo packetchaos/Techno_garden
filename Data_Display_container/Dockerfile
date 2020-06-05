@@ -11,9 +11,14 @@ RUN echo 192.168.128.2 > /etc/resolv.conf
 
 CMD mkdir /usr/src/app
 CMD mkdir /usr/src/app/templates
+CMD mkdir /usr/src/app/static
 
 ADD water_display.py /usr/src/app/
+ADD static/home-alone.jpg /usr/src/app/static/
+ADD static/really.gif /usr/src/app/static/
 ADD templates/data.html /usr/src/app/templates/
+ADD templates/oops.html /usr/src/app/templates/
+ADD templates/really.html /usr/src/app/templates/
 ENV PATH "$PATH:/usr/bin/env/"
 
 EXPOSE 5005

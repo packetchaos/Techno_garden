@@ -1,7 +1,7 @@
 import requests
 import time
 import io
-from flask import Flask, Response, render_template, request
+from flask import Flask, Response, render_template, request, url_for
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
@@ -31,62 +31,75 @@ def main_route():
     sensor = request.args.get('sensor')
 
     # grab today's date to use if no date is provided
-    today = time.strftime("%B%d", time.localtime(time.time()))
-
-    # grab the Month and Day from URL Params
-    month = request.args.get('month')
-    day = request.args.get('day')
-
-    total_data = request_data("GET", "/water?sensor=" + str(sensor) + "&month=" + str(month) + "&day=" + str(day))
-
-    global compare_date
-    compare_date = str(month) + str(day)
-
-    # If there is no Query params compare_Date with be NoneNone
-    if compare_date == 'NoneNone':
-        compare_date = today
-        month = time.strftime("%B", time.localtime(time.time()))
-        day = time.strftime("%d", time.localtime(time.time()))
-
-    # List to hold parsed data for graphing
-    value_list = []
-    total_list = []
-
-    # Need to find the lowest value for our starting point
-    # This will be used in case the program isn't reset every day
-    # Water.py should be reset daily so the rotations don't grow to a massive number.
-    for i in total_data[month][day]:
-        # Grab the month and day for comparison - jan20 for jan 20th
-        date = time.strftime("%B%d", time.localtime(float(i["timestamp"])))
-
-        # date to Display
-        r_date = time.strftime("%B %d %H:%M:%S", time.localtime(float(i["timestamp"])))
-
-        # Only grab calculations for a single day; use compare_date
-        if date == compare_date:
-            value_list.append(i['rotations'])
-            temp_list = [i["rotations"], i['sensor'], str(r_date)]
-            total_list.append(temp_list)
+    today = time.strftime("%Y-%m-%d", time.localtime(time.time()))
 
     try:
-        # Grab min and max values to calculate the total used
-        start_value = min(value_list)
-        end_value = max(value_list)
-    except ValueError:
-        # If the water didn't run, set the values to zero to avoid an error.
-        start_value = 0
-        end_value = 0
+        # grab the Month and Day from URL Params
+        date = request.args.get('date')
 
-    # Grab the total and convert into Gallons.
-    total = ((end_value - start_value)/100)/4
-    line_name = "Unknown"
+        # define the pattern to turn into epoch
+        pattern = '%Y-%m-%d'
 
-    if sensor == '13':
-        line_name = "Main Line"
-    elif sensor == '15':
-        line_name = "Pepper Bed"
+        # turn url pram into epoch
+        epoch = int(time.mktime(time.strptime(date, pattern)))
 
-    return render_template("data.html", total=total, total_list=total_list, compare_date=compare_date, sensor=sensor, month=month, day=day, line_name=line_name)
+        # Grab the Month for Parsing
+        month = time.strftime("%B", time.localtime(epoch))
+
+        # Grab the Day for Parsing
+        day = time.strftime("%d", time.localtime(epoch))
+    except:
+        # If there is no Query params default today's date
+        month = time.strftime("%B", time.localtime(time.time()))
+        day = time.strftime("%d", time.localtime(time.time()))
+        date = today
+
+    # Pull the data from the /water API using the sensor ID
+    total_data = request_data("GET", "/water?sensor=" + str(sensor))# + "&month=" + str(month) + "&day=" + str(day))
+    try:
+        # List to hold parsed data for graphing
+        value_list = []
+        total_list = []
+
+        date_string = month + " " + day
+
+        for i in total_data[month][day]:
+            # Grab the month and day for comparison
+            data_date = time.strftime("%Y-%m-%d", time.localtime(float(i["timestamp"])))
+
+            # date to Display
+            r_date = time.strftime("%B %d %H:%M:%S", time.localtime(float(i["timestamp"])))
+
+            # Only grab calculations for a single day; use compare_date
+            if data_date == date:
+                value_list.append(i['rotations'])
+                temp_list = [i["rotations"], i['sensor'], str(r_date)]
+                total_list.append(temp_list)
+
+        try:
+            # Grab min and max values to calculate the total used
+            start_value = min(value_list)
+            end_value = max(value_list)
+        except ValueError:
+            # If the water didn't run, set the values to zero to avoid an error.
+            start_value = 0
+            end_value = 0
+
+        # Grab the total and convert into Gallons.
+        total = ((end_value - start_value)/100)/4
+        line_name = "Unknown"
+
+        if sensor == '13':
+            line_name = "Main Line"
+        elif sensor == '15':
+            line_name = "Pepper Bed"
+
+        return render_template("data.html", total=total, total_list=total_list, date_string=date_string, sensor=sensor, month=month, day=day, line_name=line_name)
+    except KeyError:
+        if date > today:
+            return render_template("really.html", sensor=sensor, date=date)
+        else:
+            return render_template("oops.html", sensor=sensor, date=date)
 
 
 @app.route('/<sensor>/<month>/<day>/today.png')
@@ -123,6 +136,7 @@ def display_data(sensor, month, day):
 
     # Now go through the list again to compare values for Gallons per 60 seconds
     for update in data[month][day]:
+
         # make time readable
         newtime = time.strftime("%H:%M", time.localtime(float(update["timestamp"])))
 

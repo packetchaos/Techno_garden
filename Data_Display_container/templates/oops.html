@@ -92,7 +92,8 @@ h1 span {
   color: #18D0F5;
 }
 </style>
-<head>
+<head></head>
+<body>
     <meta charset="UTF-8">
     <div><form action="http://0.0.0.0:5005/">
         <input type="date" name="date">
@@ -103,28 +104,13 @@ h1 span {
         <input type="submit">
         </form>
     </div>
-    <title>Water Usage</title>
-    <h1 align="Center">{{date_string}} Water Usage</h1>
-    <h2 align="Center">{{line_name}} - {{sensor}}</h2>
-    <h3 align="Center">Total = {{total}} Gallons Used</h3>
-    <div align="Center"><img src="{{sensor}}/{{month}}/{{day}}/today.png"></div>
-    <table class="responstable">
-        <tr>
-            <th>Sensor ID</th>
-            <th>Rotation Count</th>
-            <th>Timestamp</th>
-        </tr>
-    {% for update in total_list %}
-        <tr>
-            <td style="min-width:200px">{{ update[1] }} </td>
-            <td style="min-width:200px">{{ update[0] }} </td>
-            <td style="min-width:200px">{{ update[2] }} </td>
-        </tr>
-    {% endfor %}
 
-</table>
-</head>
-<body>
+    <div align="Center"><img src="{{url_for('static', filename='home-alone.jpg')}}"></div>
+    <h1 align="Center">Oh Shit! </h1>
+    <h1 align="Center"> There is no data on {{date}}! for Sensor {{sensor}}</h1>
+
+
+
 
 </body>
 </html>
