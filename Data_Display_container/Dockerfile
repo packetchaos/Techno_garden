@@ -19,6 +19,7 @@ ADD static/really.gif /usr/src/app/static/
 ADD templates/data.html /usr/src/app/templates/
 ADD templates/oops.html /usr/src/app/templates/
 ADD templates/really.html /usr/src/app/templates/
+ADD templates/home.html /usr/src/app/templates/
 ENV PATH "$PATH:/usr/bin/env/"
 
 EXPOSE 5005

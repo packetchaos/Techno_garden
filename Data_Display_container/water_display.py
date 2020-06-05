@@ -26,6 +26,9 @@ def request_data(method, url_mod):
 
 
 @app.route('/')
+def home_route():
+    return render_template('home.html')
+
 @app.route('/stats')
 def main_route():
     sensor = request.args.get('sensor')
@@ -182,6 +185,92 @@ def display_data(sensor, month, day):
 
     # Set the Title of the Graph
     axis.set_title("Water Usage", color='#9beafa')
+
+    # Set the facecolor to the darkmode color
+    axis.set_facecolor('#222')
+    output = io.BytesIO()
+
+    FigureCanvasAgg(fig).print_png(output)
+
+    return Response(output.getvalue(), mimetype="image/png")
+
+
+@app.route('/<sensor>/homepage.png')
+def home_page(sensor):
+    month = time.strftime("%B", time.localtime(time.time()))
+    day = time.strftime("%d", time.localtime(time.time()))
+
+    # grab raw data from Water_capture container
+    data = request_data("GET", "/water?sensor=" + sensor + "&month=" + str(month) + "&day=" + str(day))
+
+    pulse_list = []
+    date_list = []
+    lowest_value = []
+
+    # only Graph water usage for a single day; use compare_date.
+    global compare_date
+    compare_date = str(month) + str(day)
+
+    # need to find the lowest value for our starting point
+    # This is to avoid incorrect calculations when water.py is run for more than one day.
+    for i in data[month][day]:
+        # grab all of the rotations to find the lowest value as a starting point.
+        lowest_value.append(i['rotations'])
+    try:
+        # Set the lowest value to the last value for our calculations and graphing
+        last_value = min(lowest_value)
+    except ValueError:
+        # set the value to zero to display a blank graph; better than an Error
+        last_value = 0
+
+    # Now go through the list again to compare values for Gallons per 60 seconds
+    for update in data[month][day]:
+
+        # make time readable
+        newtime = time.strftime("%H:%M", time.localtime(float(update["timestamp"])))
+
+        # Grab the MonthDay string for capturing a single day of data
+        date = time.strftime("%B%d", time.localtime(float(update["timestamp"])))
+
+        if date == compare_date:
+            # 455 pulses per liter - source: http://pnrsolution.org/Datacenter/Vol4/Issue3/16.pdf
+            # rate is rotations between reporting times. current - last value
+            gallons = ((int(update['rotations']) - last_value)/100)/4
+            pulse_list.append(gallons)
+            date_list.append(newtime)
+
+            # set the last value to the current value for rate calculation
+            last_value = int(update["rotations"])
+
+    # Set the figure size
+    fig = Figure(figsize=(8, 4))
+
+    # Hide the whitepace of the figure
+    fig.patch.set_visible(False)
+
+    axis = fig.add_subplot(1, 1, 1)
+
+    # use the date and pulse count to graph the data
+    axis.stackplot(date_list, pulse_list, color='#19C3E5')
+
+    # Set the spine colors
+    axis.spines['bottom'].set_color('#9beafa')
+    axis.spines['top'].set_color('#9beafa')
+    axis.spines['left'].set_color('#9beafa')
+    axis.spines['right'].set_color('#9beafa')
+
+    # Add an Y label
+    axis.set_ylabel('Gallons per Minute')
+
+    # Set the Y axis colors
+    axis.tick_params(axis='y', colors='#9beafa')
+
+    # Set the X axis colors - rotate X axis for readability
+    axis.tick_params(axis='x', colors='#9beafa', rotation=90)
+    axis.yaxis.label.set_color('#9beafa')
+
+    # Set the Title of the Graph
+    axis.set_title("Water Usage for Sensor " + str(sensor), color='#9beafa')
 
     # Set the facecolor to the darkmode color
     axis.set_facecolor('#222')
